@@ -1,19 +1,20 @@
 [gd_scene load_steps=4 format=3 uid="uid://choa0mv3yrclv"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cbx31"]
-albedo_color = Color(0.983518, 0.216802, 0.425123, 1)
+[ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="1_10x6a"]
 
-[sub_resource type="SphereMesh" id="SphereMesh_x8fbi"]
-material = SubResource("StandardMaterial3D_cbx31")
+[sub_resource type="SphereMesh" id="SphereMesh_10x6a"]
+radius = 0.1
+height = 0.2
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_41u45"]
+[sub_resource type="SphereShape3D" id="SphereShape3D_f6quk"]
+radius = 0.112505
 
 [node name="RigidBody3D" type="RigidBody3D"]
+script = ExtResource("1_10x6a")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0, 0)
-mesh = SubResource("SphereMesh_x8fbi")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00860858, -8.9407e-08, -0.00484133)
+mesh = SubResource("SphereMesh_10x6a")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(0.145, 0, 0, 0, 0.145, 0, 0, 0, 0.145, 0, 0, 0)
-shape = SubResource("SphereShape3D_41u45")
+shape = SubResource("SphereShape3D_f6quk")

@@ -1,10 +1,9 @@
-[gd_scene load_steps=14 format=3 uid="uid://cyqd82tyyp56o"]
+[gd_scene load_steps=13 format=3 uid="uid://cyqd82tyyp56o"]
 
 [ext_resource type="Script" uid="uid://b7g27qg3hstq8" path="res://scripts/PlayerBodyController.gd" id="1_w2twt"]
 [ext_resource type="PackedScene" uid="uid://b5qok5lswlsux" path="res://prefabs/ButtonInteractable.tscn" id="3_pu3yx"]
 [ext_resource type="Script" uid="uid://bdlkjsx7krm6s" path="res://scripts/SpawnerButton.gd" id="4_gubc5"]
 [ext_resource type="PackedScene" uid="uid://choa0mv3yrclv" path="res://prefabs/ball.tscn" id="5_gubc5"]
-[ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="5_rt2n2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w2twt"]
 albedo_color = Color(0.105882, 0.333333, 0, 1)
@@ -98,7 +97,7 @@ visible = false
 mesh = SubResource("SphereMesh_pw63i")
 
 [node name="SpawnPoint" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.62219, -2.05976)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0478077, 4.26184, -2.56161)
 
 [node name="Button" parent="." node_paths=PackedStringArray("spawn_point") instance=ExtResource("3_pu3yx")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88371, 0.51877, -4.05026)
@@ -107,6 +106,8 @@ scene_to_spawn = ExtResource("5_gubc5")
 spawn_point = NodePath("../SpawnPoint")
 
 [node name="RigidBody3D" parent="." instance=ExtResource("5_gubc5")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.975377, 0.560019, -4.05329)
-script = ExtResource("5_rt2n2")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.974183, 0.566076, -4.0445)
 interact_text = "Press F to pick up!"
+
+[node name="RigidBody3D2" parent="." instance=ExtResource("5_gubc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.710888, 2.2606, -2.24978)
