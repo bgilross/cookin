@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://cyqd82tyyp56o"]
+[gd_scene load_steps=16 format=3 uid="uid://cyqd82tyyp56o"]
 
 [ext_resource type="Script" uid="uid://b7g27qg3hstq8" path="res://scripts/PlayerBodyController.gd" id="1_w2twt"]
 [ext_resource type="PackedScene" uid="uid://b5qok5lswlsux" path="res://prefabs/ButtonInteractable.tscn" id="3_pu3yx"]
@@ -27,7 +27,15 @@ size = Vector3(6.51563, 1, 1)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2c62f"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_pu3yx"]
+size = Vector3(1, 2.04785, 1)
+
 [sub_resource type="SphereMesh" id="SphereMesh_pw63i"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_pu3yx"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gubc5"]
+size = Vector3(1, 2.06934, 0.348633)
 
 [node name="MainScene" type="Node3D"]
 
@@ -75,11 +83,16 @@ shape = SubResource("BoxShape3D_pw63i")
 
 [node name="PlayerBody" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0357316, -0.0223504, 0.0305508)
+platform_on_leave = 2
 script = ExtResource("1_w2twt")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.000872135, 1.00854, 0.0041368)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.000872135, 0.974133, 0.0041368)
 shape = SubResource("CapsuleShape3D_2c62f")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00106716, 1.0119, 0.00384444)
+shape = SubResource("BoxShape3D_pu3yx")
 
 [node name="Camera3D" type="Camera3D" parent="PlayerBody"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55354, 0)
@@ -96,6 +109,17 @@ transform = Transform3D(0.085, 0, 0, 0, 0.085, 0, 0, 0, 0.085, 0.0779354, -0.183
 visible = false
 mesh = SubResource("SphereMesh_pw63i")
 
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.982113, 0)
+mesh = SubResource("CapsuleMesh_pu3yx")
+
+[node name="PushArea" type="Area3D" parent="PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.448819, -0.734512)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerBody/PushArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.05855e-05, 0.576256, 0.352206)
+shape = SubResource("BoxShape3D_gubc5")
+
 [node name="SpawnPoint" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0478077, 4.26184, -2.56161)
 
@@ -111,3 +135,6 @@ interact_text = "Press F to pick up!"
 
 [node name="RigidBody3D2" parent="." instance=ExtResource("5_gubc5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.710888, 2.2606, -2.24978)
+
+[node name="RigidBody3D3" parent="." instance=ExtResource("5_gubc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38469, 0.0635532, -0.915479)

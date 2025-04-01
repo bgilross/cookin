@@ -1,3 +1,4 @@
+#PlayerBodyController.gd
 extends CharacterBody3D
 
 const SPEED = 5.0
@@ -7,11 +8,14 @@ const MOUSE_SENSITIVITY = 0.002
 var pitch := 0.0
 var current_target: Node = null
 var held_object: Node3D = null
+var push_force := 1.1
 
 @onready var camera := $Camera3D
 @onready var raycast := $Camera3D/RayCast3D
 @onready var interact_label := $"../CanvasLayer/Label"
 @onready var hold_position := $Camera3D/HoldPosition
+@onready var push_area := $PushArea
+
 
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
@@ -28,7 +32,11 @@ func _input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	handle_movement(delta)
+	move_and_slide()
 	handle_interaction_raycast()
+	handle_push_collisions()
+	
+
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
@@ -36,6 +44,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			drop_held_object()
 		elif current_target and current_target.has_method("interact"):
 			current_target.interact(self)
+
+func handle_push_collisions():
+	for body in push_area.get_overlapping_bodies():
+			if body is RigidBody3D:
+				var dir = (body.global_position - global_position).normalized()
+				dir.y = 0
+				body.apply_impulse(dir * push_force)
+
 
 # ----------------------------
 # Movement
@@ -49,6 +65,7 @@ func handle_movement(delta: float) -> void:
 
 	var input_dir := Input.get_vector("left", "right", "forward", "back")
 	var direction := (transform.basis * Vector3(input_dir.x, 0, input_dir.y)).normalized()
+	var push_strength = 2
 
 	if direction:
 		velocity.x = direction.x * SPEED
@@ -56,8 +73,9 @@ func handle_movement(delta: float) -> void:
 	else:
 		velocity.x = move_toward(velocity.x, 0, SPEED)
 		velocity.z = move_toward(velocity.z, 0, SPEED)
-
-	move_and_slide()
+	
+	
+	
 
 # ----------------------------
 # Interaction
@@ -113,3 +131,5 @@ func drop_held_object() -> void:
 		obj.freeze = false
 		obj.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
 		obj.sleeping = false
+		
+		

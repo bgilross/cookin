@@ -1,3 +1,5 @@
+#PickableObject.gd
+
 extends RigidBody3D
 
 @export var interact_text: String = "Press F to pick up"

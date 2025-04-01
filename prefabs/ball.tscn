@@ -1,6 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://choa0mv3yrclv"]
+[gd_scene load_steps=5 format=3 uid="uid://choa0mv3yrclv"]
 
 [ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="1_10x6a"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_10x6a"]
+friction = 0.3
+rough = true
+bounce = 0.6
 
 [sub_resource type="SphereMesh" id="SphereMesh_10x6a"]
 radius = 0.1
@@ -10,6 +15,12 @@ height = 0.2
 radius = 0.112505
 
 [node name="RigidBody3D" type="RigidBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0220901, 0)
+mass = 0.5
+physics_material_override = SubResource("PhysicsMaterial_10x6a")
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 4
 script = ExtResource("1_10x6a")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]

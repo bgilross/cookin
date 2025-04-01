@@ -1,3 +1,4 @@
+#SpawnerButton.gd
 extends StaticBody3D
 
 @export var interact_text: String = "Press F to activate"
