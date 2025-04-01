@@ -1,0 +1,131 @@
+[gd_scene load_steps=17 format=3 uid="uid://cyqd82tyyp56o"]
+
+[ext_resource type="Script" uid="uid://b7g27qg3hstq8" path="res://scripts/PlayerBodyController.gd" id="1_w2twt"]
+[ext_resource type="Script" uid="uid://d2fj8itsyfndu" path="res://scripts/Interactable.gd" id="2_pw63i"]
+[ext_resource type="PackedScene" uid="uid://b5qok5lswlsux" path="res://prefabs/ButtonInteractable.tscn" id="3_pu3yx"]
+[ext_resource type="Script" uid="uid://bdlkjsx7krm6s" path="res://scripts/SpawnerButton.gd" id="4_gubc5"]
+[ext_resource type="PackedScene" uid="uid://choa0mv3yrclv" path="res://prefabs/ball.tscn" id="5_gubc5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w2twt"]
+albedo_color = Color(0.105882, 0.333333, 0, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0f027"]
+ground_bottom_color = Color(0.61712, 0.549169, 0.47078, 1)
+
+[sub_resource type="Sky" id="Sky_2c62f"]
+sky_material = SubResource("ProceduralSkyMaterial_0f027")
+
+[sub_resource type="Environment" id="Environment_gyfs4"]
+background_mode = 2
+sky = SubResource("Sky_2c62f")
+tonemap_mode = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pw63i"]
+albedo_color = Color(0, 0.510046, 0.905329, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pw63i"]
+size = Vector3(6.51563, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ykc4"]
+albedo_color = Color(0.88662, 0, 0.166658, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_pu3yx"]
+material = SubResource("StandardMaterial3D_7ykc4")
+radius = 0.1
+height = 0.2
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_w2twt"]
+radius = 0.100172
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2c62f"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_pw63i"]
+
+[node name="MainScene" type="Node3D"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -281.0
+offset_top = -37.0
+offset_right = 281.0
+offset_bottom = 38.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+
+[node name="Envorionment" type="Node" parent="."]
+
+[node name="Ground" type="CSGBox3D" parent="Envorionment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00100994, -0.536447, 0.0174503)
+use_collision = true
+size = Vector3(27.403, 1, 46.211)
+material = SubResource("StandardMaterial3D_w2twt")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Envorionment"]
+environment = SubResource("Environment_gyfs4")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Envorionment"]
+transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
+shadow_enabled = true
+
+[node name="CounterStaticBody" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.000594616, 2.38419e-07, -4.25025)
+
+[node name="CounterMesh" type="CSGBox3D" parent="CounterStaticBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00346279, 0, 0.0251274)
+size = Vector3(6.51758, 1, 1)
+material = SubResource("StandardMaterial3D_pw63i")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CounterStaticBody"]
+shape = SubResource("BoxShape3D_pw63i")
+
+[node name="BallObject" type="RigidBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0181282, 0.611105, -4.26976)
+script = ExtResource("2_pw63i")
+
+[node name="BallMesh" type="MeshInstance3D" parent="BallObject"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00166285, 0, -8.24928e-05)
+mesh = SubResource("SphereMesh_pu3yx")
+skeleton = NodePath("../../root/@EditorNode@21272/@Panel@14/@VBoxContainer@15/DockHSplitLeftL/DockHSplitLeftR/DockHSplitMain/@VBoxContainer@26/DockVSplitCenter/@VSplitContainer@54/@VBoxContainer@55/@EditorMainScreen@102/MainScreen/@CanvasItemEditor@11482/@VSplitContainer@11134/@HSplitContainer@11136/@HSplitContainer@11138/@Control@11139/@SubViewportContainer@11140/@SubViewport@11141/MainScene/Envorionment")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BallObject"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00653374, -0.0151613, -0.024178)
+shape = SubResource("SphereShape3D_w2twt")
+
+[node name="PlayerBody" type="CharacterBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0357316, -0.0223504, 0.0305508)
+script = ExtResource("1_w2twt")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.00854, 0)
+shape = SubResource("CapsuleShape3D_2c62f")
+
+[node name="Camera3D" type="Camera3D" parent="PlayerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55354, 0)
+
+[node name="RayCast3D" type="RayCast3D" parent="PlayerBody/Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000468254, 0, -0.00101233)
+target_position = Vector3(0, 0, -2)
+
+[node name="HoldPosition" type="Node3D" parent="PlayerBody/Camera3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0889363, 0.0137008, -1.45991)
+
+[node name="DEBUG" type="MeshInstance3D" parent="PlayerBody/Camera3D/HoldPosition"]
+transform = Transform3D(0.085, 0, 0, 0, 0.085, 0, 0, 0, 0.085, 0.0779354, -0.183789, 1.02565)
+visible = false
+mesh = SubResource("SphereMesh_pw63i")
+
+[node name="SpawnPoint" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.62219, -2.05976)
+
+[node name="Button" parent="." node_paths=PackedStringArray("spawn_point") instance=ExtResource("3_pu3yx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88371, 0.51877, -4.05026)
+script = ExtResource("4_gubc5")
+scene_to_spawn = ExtResource("5_gubc5")
+spawn_point = NodePath("../SpawnPoint")
