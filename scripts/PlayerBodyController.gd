@@ -1,4 +1,3 @@
-#PlayerBodyController.gd
 extends CharacterBody3D
 
 const SPEED = 5.0
@@ -9,6 +8,8 @@ var pitch := 0.0
 var current_target: Node = null
 var held_object: Node3D = null
 var push_force := 1.1
+
+const PickableUtils = preload("res://scripts/PickableUtils.gd")
 
 @onready var camera := $Camera3D
 @onready var raycast := $Camera3D/RayCast3D
@@ -37,13 +38,15 @@ func _physics_process(delta: float) -> void:
 	handle_push_collisions()
 	
 
-
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		if held_object:
 			drop_held_object()
-		elif current_target and current_target.has_method("interact"):
-			current_target.interact(self)
+		elif current_target:
+			if current_target.has_method("pickup"):
+				current_target.pickup(self)
+			elif current_target.has_method("interact"):
+				current_target.interact(self)
 
 func handle_push_collisions():
 	for body in push_area.get_overlapping_bodies():
@@ -84,7 +87,7 @@ func handle_interaction_raycast() -> void:
 	raycast.force_raycast_update()
 	if raycast.is_colliding():
 		var hit = raycast.get_collider()
-		if hit.has_method("interact"):
+		if hit.has_method("pickup") or hit.has_method("interact"):
 			current_target = hit
 			if "interact_text" in hit:
 				interact_label.text = hit.interact_text
@@ -94,42 +97,19 @@ func handle_interaction_raycast() -> void:
 			return
 	current_target = null
 	interact_label.visible = false
+
 # ----------------------------
 # Holding
 # ----------------------------
 func pick_up_object(obj: Node3D) -> void:
-	if obj is RigidBody3D:
-		obj.freeze = true
-		obj.linear_velocity = Vector3.ZERO
-		obj.angular_velocity = Vector3.ZERO
-		obj.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
-
-		obj.get_parent().remove_child(obj)
-		hold_position.add_child(obj)
-		obj.transform = Transform3D.IDENTITY
-
-		var shape = obj.get_node_or_null("CollisionShape3D")
-		if shape:
-			shape.disabled = true
-
-		held_object = obj
-		interact_label.visible = false
+	PickableUtils.pickup(obj, self)
+	held_object = obj
 
 func drop_held_object() -> void:
 	if held_object:
-		var obj = held_object
+		PickableUtils.drop(held_object, hold_position.global_transform)
 		held_object = null
 
-		hold_position.remove_child(obj)
-		get_tree().root.add_child(obj)
-		obj.global_transform = hold_position.global_transform
-
-		var shape = obj.get_node_or_null("CollisionShape3D")
-		if shape:
-			shape.disabled = false
-
-		obj.freeze = false
-		obj.freeze_mode = RigidBody3D.FREEZE_MODE_STATIC
-		obj.sleeping = false
-		
-		
+func hold_item(obj: Node3D) -> void:
+	held_object = obj
+	hold_position.add_child(obj)
