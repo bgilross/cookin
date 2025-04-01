@@ -1,10 +1,10 @@
-[gd_scene load_steps=17 format=3 uid="uid://cyqd82tyyp56o"]
+[gd_scene load_steps=14 format=3 uid="uid://cyqd82tyyp56o"]
 
 [ext_resource type="Script" uid="uid://b7g27qg3hstq8" path="res://scripts/PlayerBodyController.gd" id="1_w2twt"]
-[ext_resource type="Script" uid="uid://d2fj8itsyfndu" path="res://scripts/Interactable.gd" id="2_pw63i"]
 [ext_resource type="PackedScene" uid="uid://b5qok5lswlsux" path="res://prefabs/ButtonInteractable.tscn" id="3_pu3yx"]
 [ext_resource type="Script" uid="uid://bdlkjsx7krm6s" path="res://scripts/SpawnerButton.gd" id="4_gubc5"]
 [ext_resource type="PackedScene" uid="uid://choa0mv3yrclv" path="res://prefabs/ball.tscn" id="5_gubc5"]
+[ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="5_rt2n2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w2twt"]
 albedo_color = Color(0.105882, 0.333333, 0, 1)
@@ -25,17 +25,6 @@ albedo_color = Color(0, 0.510046, 0.905329, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pw63i"]
 size = Vector3(6.51563, 1, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_7ykc4"]
-albedo_color = Color(0.88662, 0, 0.166658, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_pu3yx"]
-material = SubResource("StandardMaterial3D_7ykc4")
-radius = 0.1
-height = 0.2
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_w2twt"]
-radius = 0.100172
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_2c62f"]
 
@@ -85,25 +74,12 @@ material = SubResource("StandardMaterial3D_pw63i")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="CounterStaticBody"]
 shape = SubResource("BoxShape3D_pw63i")
 
-[node name="BallObject" type="RigidBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0181282, 0.611105, -4.26976)
-script = ExtResource("2_pw63i")
-
-[node name="BallMesh" type="MeshInstance3D" parent="BallObject"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00166285, 0, -8.24928e-05)
-mesh = SubResource("SphereMesh_pu3yx")
-skeleton = NodePath("../../root/@EditorNode@21272/@Panel@14/@VBoxContainer@15/DockHSplitLeftL/DockHSplitLeftR/DockHSplitMain/@VBoxContainer@26/DockVSplitCenter/@VSplitContainer@54/@VBoxContainer@55/@EditorMainScreen@102/MainScreen/@CanvasItemEditor@11482/@VSplitContainer@11134/@HSplitContainer@11136/@HSplitContainer@11138/@Control@11139/@SubViewportContainer@11140/@SubViewport@11141/MainScene/Envorionment")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BallObject"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00653374, -0.0151613, -0.024178)
-shape = SubResource("SphereShape3D_w2twt")
-
 [node name="PlayerBody" type="CharacterBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0357316, -0.0223504, 0.0305508)
 script = ExtResource("1_w2twt")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PlayerBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.00854, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.000872135, 1.00854, 0.0041368)
 shape = SubResource("CapsuleShape3D_2c62f")
 
 [node name="Camera3D" type="Camera3D" parent="PlayerBody"]
@@ -129,3 +105,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.88371, 0.51877, -4.05026)
 script = ExtResource("4_gubc5")
 scene_to_spawn = ExtResource("5_gubc5")
 spawn_point = NodePath("../SpawnPoint")
+
+[node name="RigidBody3D" parent="." instance=ExtResource("5_gubc5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.975377, 0.560019, -4.05329)
+script = ExtResource("5_rt2n2")
+interact_text = "Press F to pick up!"

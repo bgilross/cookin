@@ -9,9 +9,8 @@ func interact(player: Node) -> void:
 		print("Missing scene or spawn point")
 		return
 		
-	var spawned = scene_to_spawn.instatiate()
-	spawned.global_transform = spawn_point.global_transfrom
+	var spawned = scene_to_spawn.instantiate()
+	spawned.global_transform = spawn_point.global_transform
 	get_tree().current_scene.add_child(spawned)
 	
-	print("BUTTON is pressed: Spawned Object:")
-	
+	print("BUTTON is pressed: Spawned Object.")

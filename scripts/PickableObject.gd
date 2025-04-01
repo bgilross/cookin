@@ -5,5 +5,3 @@ extends RigidBody3D
 func interact(player: Node) -> void:
 	if player.has_method("pick_up_object"):
 		player.pick_up_object(self)
-		
-		
