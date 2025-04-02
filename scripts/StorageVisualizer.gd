@@ -1,5 +1,4 @@
-## Utility script for visualizing storage slots in the editor
-## Attach this to any storage container to see its slots
+# StorageVisualizer.gd
 extends MeshInstance3D
 
 @export var debug_in_game: bool = false  # Show visualization during gameplay
@@ -19,6 +18,7 @@ func _ready():
 	# Make sure parent has storage_slots
 	if not storage_parent.has_method("get_storage_slots") and not "storage_slots" in storage_parent:
 		push_error("StorageVisualizer parent must have storage_slots or get_storage_slots() method")
+		return
 	
 	# Create immediate mesh for drawing
 	debug_mesh = ImmediateMesh.new()
@@ -30,6 +30,9 @@ func _ready():
 	debug_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	debug_material.vertex_color_use_as_albedo = true
 	material_override = debug_material
+	
+	# Print debugging info
+	print("StorageVisualizer initialized for: ", storage_parent.name)
 
 func _process(_delta):
 	# Only update visualization when needed
@@ -38,20 +41,32 @@ func _process(_delta):
 
 func update_debug_visualization():
 	if not visualize_slots:
-		debug_mesh.clear()
+		# Instead of clearing, create a new empty mesh
+		debug_mesh = ImmediateMesh.new()
+		mesh = debug_mesh
 		return
 		
 	# Get storage slots from parent
-	var slots
+	var slots = []
+	
 	if storage_parent.has_method("get_storage_slots"):
 		slots = storage_parent.get_storage_slots()
 	elif "storage_slots" in storage_parent:
 		slots = storage_parent.storage_slots
 	else:
+		print("No storage slots found in parent")
 		return
 	
-	# Clear previous debugging
-	debug_mesh.clear()
+	if slots.size() == 0:
+		print("Parent has 0 storage slots")
+		return
+	
+	# Instead of clearing, create a new mesh
+	debug_mesh = ImmediateMesh.new()
+	mesh = debug_mesh
+	
+	# IMPORTANT: Don't try to set material on surface 0 before it exists
+	# The material is already set via material_override
 	
 	# Draw each slot
 	for slot in slots:
@@ -59,10 +74,11 @@ func update_debug_visualization():
 
 func draw_slot_wireframe(slot):
 	var slot_pos = slot.position
-	var size = slot.size / 2
+	var size = slot.size if "size" in slot and slot.size else Vector3(0.1, 0.1, 0.1)
+	size = size / 2  # We need half-extents for drawing
 	
 	# Set color based on whether slot is occupied
-	var color = slot_color_filled if slot.occupied else slot_color_empty
+	var color = slot_color_filled if "occupied" in slot and slot.occupied else slot_color_empty
 	
 	# Define the 8 corners of the cube
 	var corners = []

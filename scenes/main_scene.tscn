@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://bmr26oww44ruv" path="res://prefabs/pickup_tray.tscn" id="5_rt2n2"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w2twt"]
-albedo_color = Color(0.105882, 0.333333, 0, 1)
+albedo_color = Color(0.167214, 0.086107, 6.01634e-09, 1)
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0f027"]
 ground_bottom_color = Color(0.61712, 0.549169, 0.47078, 1)
@@ -21,7 +21,7 @@ sky = SubResource("Sky_2c62f")
 tonemap_mode = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pw63i"]
-albedo_color = Color(0, 0.510046, 0.905329, 1)
+albedo_color = Color(0.0537546, 0.0604352, 0.0295725, 1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_pw63i"]
 size = Vector3(6.51563, 1, 1)

@@ -94,9 +94,13 @@ static func calculate_storage_slots(
 				slot_pos.y += item_size.y + padding
 		
 		StorageArrangement.GRID:
+			
 			# For grid, we create a 2D array of positions
+			print("Starting GRID")
 			var width_slots = int(container_size.x / (item_size.x + padding))
 			var depth_slots = int(container_size.z / (item_size.z + padding))
+			print("Width Slots = ", width_slots)
+			print("Height Slots = ", depth_slots)
 			
 			var start_x = -container_size.x / 2 + item_size.x / 2
 			var start_z = -container_size.z / 2 + item_size.z / 2

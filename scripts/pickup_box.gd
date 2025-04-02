@@ -6,7 +6,8 @@ const PickableUtils = preload("res://scripts/PickableUtils.gd")
 
 @export var interact_text: String = "Press F to interact with tray"
 @export var item_size: Vector3 = Vector3(0.1, 0.05, 0.1)  # Average size of items to store
-@export var max_items: int = 6  # Maximum number of items (as a fallback)
+@export var max_items: int = 100  # Maximum number of items (as a fallback)
+@export var item_padding: int = .02
 
 # Storage properties
 var storage_slots: Array[VisibleStorageUtils.StorageSlot] = []
@@ -29,7 +30,7 @@ func _ready() -> void:
 		storage_area,
 		VisibleStorageUtils.StorageArrangement.GRID,
 		item_size,
-		0.02  # Small padding between items
+		item_padding
 	)
 	
 	# Limit the number of slots to max_items if specified

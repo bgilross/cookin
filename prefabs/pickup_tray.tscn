@@ -1,20 +1,28 @@
 [gd_scene load_steps=6 format=3 uid="uid://bmr26oww44ruv"]
 
-[ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="1_k2l64"]
+[ext_resource type="Script" uid="uid://dmg0f3afqh2ds" path="res://scripts/pickup_box.gd" id="1_ky6mk"]
 [ext_resource type="Script" uid="uid://g4r2ycasq2ks" path="res://scripts/StorageVisualizer.gd" id="2_ky6mk"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ky6mk"]
 size = Vector3(0.72, 0.01, 0.775)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_7bav3"]
+size = Vector3(0.836914, 1, 0.829102)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_k2l64"]
+size = Vector3(0.801025, 1, 0.775391)
 
 [node name="RigidBody3D" type="RigidBody3D"]
-script = ExtResource("1_k2l64")
+script = ExtResource("1_ky6mk")
+interact_text = "Press F to pick up"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_ky6mk")
+
+[node name="DebugVisualizer" type="MeshInstance3D" parent="."]
+skeleton = NodePath("../StorageArea")
+script = ExtResource("2_ky6mk")
+debug_in_game = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00326735, 0.479955, -0.00900668)
@@ -25,6 +33,3 @@ shape = SubResource("BoxShape3D_7bav3")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StorageArea"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52969, 0)
 shape = SubResource("BoxShape3D_k2l64")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StorageArea"]
-script = ExtResource("2_ky6mk")
