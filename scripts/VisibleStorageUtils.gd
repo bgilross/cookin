@@ -71,6 +71,7 @@ static func calculate_storage_slots_from_area(
 	padding: float = 0.05
 ) -> Array[StorageSlot]:
 	var container_size = get_storage_area_size(storage_area)
+	print("Container size: ", container_size)
 	return calculate_storage_slots(container_size, arrangement, item_size, padding)
 
 # Get all valid storage slots based on container size and arrangement type
@@ -96,20 +97,27 @@ static func calculate_storage_slots(
 		StorageArrangement.GRID:
 			
 			# For grid, we create a 2D array of positions
-			print("Starting GRID")
+			print("Starting GRID calculation")
 			var width_slots = int(container_size.x / (item_size.x + padding))
 			var depth_slots = int(container_size.z / (item_size.z + padding))
-			print("Width Slots = ", width_slots)
-			print("Height Slots = ", depth_slots)
 			
-			var start_x = -container_size.x / 2 + item_size.x / 2
-			var start_z = -container_size.z / 2 + item_size.z / 2
+			if width_slots <= 0:
+				width_slots = 1
+			if depth_slots <= 0:
+				depth_slots = 1
+				
+			print("Width Slots = ", width_slots)
+			print("Depth Slots = ", depth_slots)
+			
+			var start_x = -container_size.x / 2 + item_size.x / 2 + padding
+			var start_z = -container_size.z / 2 + item_size.z / 2 + padding
 			
 			for x in range(width_slots):
 				for z in range(depth_slots):
 					var pos_x = start_x + x * (item_size.x + padding)
 					var pos_z = start_z + z * (item_size.z + padding)
 					var slot = StorageSlot.new(Vector3(pos_x, item_size.y / 2, pos_z))
+					slot.size = item_size
 					slots.append(slot)
 		
 		StorageArrangement.HANGING:
@@ -122,14 +130,17 @@ static func calculate_storage_slots(
 			for x in range(width_slots):
 				var pos_x = start_x + x * (item_size.x + padding)
 				var slot = StorageSlot.new(Vector3(pos_x, hang_height, 0))
+				slot.size = item_size
 				slots.append(slot)
 		
 		StorageArrangement.FREEFORM:
 			# For freeform, we just create a single slot in the center
 			# (freeform would typically be handled differently with custom positioning)
 			var slot = StorageSlot.new(Vector3(0, item_size.y / 2, 0))
+			slot.size = item_size
 			slots.append(slot)
 	
+	print("Created " + str(slots.size()) + " storage slots")
 	return slots
 
 # Add an item to a storage container
@@ -149,6 +160,8 @@ static func add_item_to_storage(
 		print("Storage full, no available slots")
 		return false
 	
+	print("Found available slot at position: ", target_slot.position)
+	
 	# Remove item from its current parent
 	if item.get_parent():
 		var global_transform = item.global_transform
@@ -158,7 +171,7 @@ static func add_item_to_storage(
 	# Add item to storage container
 	storage_node.add_child(item)
 	
-	# Position item in slot
+	# Position item in slot - using local coordinates relative to the storage container
 	item.position = target_slot.position
 	item.rotation = target_slot.rotation
 	
@@ -170,6 +183,7 @@ static func add_item_to_storage(
 	if item.get("storage_slot") != null:
 		item.storage_slot = target_slot
 	
+	print("Item successfully placed in slot")
 	return true
 
 # Remove an item from storage
@@ -185,19 +199,16 @@ static func remove_item_from_storage(
 			break
 	
 	if target_slot == null:
-		print("Item not found in storage")
+		print("Item not found in storage slots")
 		return null
+	
+	print("Found item in slot at position: ", target_slot.position)
 	
 	# Mark slot as unoccupied
 	target_slot.occupied = false
 	target_slot.stored_item = null
 	
-	# Remove item from storage container
-	if item.get_parent():
-		var global_transform = item.global_transform
-		item.get_parent().remove_child(item)
-		item.global_transform = global_transform
-	
+	# Item will be removed from storage container by caller
 	return item
 
 # Calculate weight/volume capacity based on stored items
@@ -217,11 +228,11 @@ static func calculate_storage_usage(slots: Array[StorageSlot]) -> Dictionary:
 	
 	return result
 
-# Visualize storage slots for debugging using modern Godot 4.x drawing
-# This should be called from _process or other appropriate function
+# Debug visualization helpers
 static func debug_draw_slots(storage_node: Node3D, slots: Array[StorageSlot]):
 	# This function requires the calling class to extend Node3D and implement _draw()
-	# Which will call this function
+	
+	var lines = []
 	
 	for slot in slots:
 		var slot_pos = slot.position
@@ -229,9 +240,6 @@ static func debug_draw_slots(storage_node: Node3D, slots: Array[StorageSlot]):
 		
 		# Set color based on whether slot is occupied
 		var color = Color(1, 0, 0, 0.5) if slot.occupied else Color(0, 1, 0, 0.5)
-		
-		# Draw cube wireframe in 3D
-		var lines = []
 		
 		# Define the 8 corners of the cube
 		var corners = []
@@ -250,13 +258,5 @@ static func debug_draw_slots(storage_node: Node3D, slots: Array[StorageSlot]):
 		
 		for edge in edges:
 			lines.append([corners[edge[0]], corners[edge[1]], color])
-		
-		# Return the lines data so the caller can use it in _draw
-		return lines
-
-# Example of how to use this in a storage container class:
-# func _draw():
-#     if Engine.is_editor_hint() or debug_mode:
-#         var lines = VisibleStorageUtils.debug_draw_slots(self, storage_slots)
-#         for line in lines:
-#             draw_line_3d(line[0], line[1], line[2])
+	
+	return lines

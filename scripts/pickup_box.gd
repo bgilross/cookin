@@ -7,7 +7,7 @@ const PickableUtils = preload("res://scripts/PickableUtils.gd")
 @export var interact_text: String = "Press F to interact with tray"
 @export var item_size: Vector3 = Vector3(0.1, 0.05, 0.1)  # Average size of items to store
 @export var max_items: int = 100  # Maximum number of items (as a fallback)
-@export var item_padding: int = .02
+@export var item_padding: float = 0.02  # Fixed the type from int to float
 
 # Storage properties
 var storage_slots: Array[VisibleStorageUtils.StorageSlot] = []
@@ -45,19 +45,20 @@ func _ready() -> void:
 
 # Player interaction
 func interact(player: Node) -> void:
-	print("Interacting with storage tray")
+	print("Interacting with storage tray from: " + player.name)
 	
 	# If player is holding something, try to store it
-	if player.held_object:
+	if "held_object" in player and player.held_object:
 		var item = player.held_object
-		player.held_object = null
 		
+		# Try to store item before removing it from player
 		if store_item(item):
-			print("Item stored in tray")
+			print("Item stored in tray: " + item.name)
+			player.held_object = null
 		else:
-			# Give it back if storage failed
-			player.hold_item(item)
 			print("Couldn't store item in tray")
+	else:
+		print("Player not holding anything to store")
 
 # Allow the tray to be picked up
 func pickup(player: Node) -> void:
@@ -81,8 +82,15 @@ func pickup(player: Node) -> void:
 
 # Store an item on the tray
 func store_item(item: Node3D) -> bool:
+	if not is_instance_valid(item):
+		print("Invalid item reference")
+		return false
+		
+	print("Attempting to store item: " + item.name)
+	
 	# Check if there's space
 	if stored_items.size() >= storage_slots.size():
+		print("Storage is full")
 		return false
 	
 	# Try to add the item
@@ -94,20 +102,51 @@ func store_item(item: Node3D) -> bool:
 		# If it's a physics object, we need to freeze it
 		if item is RigidBody3D:
 			PickableUtils.freeze_physics(item)
+		
+		print("Successfully stored item: " + item.name)
+	else:
+		print("Failed to store item in slot")
 	
 	return success
 
 # Remove an item from the tray
 func remove_item(item: Node3D) -> Node3D:
+	if not is_instance_valid(item):
+		print("Invalid item reference")
+		return null
+		
 	if not stored_items.has(item):
+		print("Item not in storage")
 		return null
 	
-	var removed_item = VisibleStorageUtils.remove_item_from_storage(item, storage_slots)
+	# Find which slot contains this item
+	var target_slot = null
+	for slot in storage_slots:
+		if slot.occupied and slot.stored_item == item:
+			target_slot = slot
+			break
+			
+	if not target_slot:
+		print("Item not found in any storage slot")
+		return null
 	
-	if removed_item:
-		stored_items.erase(item)
+	# Mark slot as unoccupied
+	target_slot.occupied = false
+	target_slot.stored_item = null
 	
-	return removed_item
+	# Remove from stored items array
+	stored_items.erase(item)
+	
+	# Prepare the item for independent existence
+	if item.get_parent() == self:
+		remove_child(item)
+	
+	# If it's a physics object, restore physics
+	if item is RigidBody3D:
+		PickableUtils.unfreeze_physics(item)
+	
+	print("Successfully removed item from tray: " + item.name)
+	return item
 
 # Signal handlers for the storage area
 func _on_storage_area_body_entered(body: Node) -> void:

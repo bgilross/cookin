@@ -101,6 +101,10 @@ func remove_item(item: Node3D) -> Node3D:
 		# Update weight if applicable
 		if item.get("weight") != null:
 			current_weight -= item.weight
+		
+		print("Removed item from storage: " + item.name)
+	else:
+		print("Failed to remove item from storage")
 	
 	return removed_item
 
