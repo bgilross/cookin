@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://bmr26oww44ruv"]
 
-[ext_resource type="Script" uid="uid://dmg0f3afqh2ds" path="res://scripts/pickup_box.gd" id="1_ky6mk"]
+[ext_resource type="Script" uid="uid://cjpbork6uglyg" path="res://scripts/TrayStorage.gd" id="1_ky6mk"]
 [ext_resource type="Script" uid="uid://g4r2ycasq2ks" path="res://scripts/StorageVisualizer.gd" id="2_ky6mk"]
 
 [sub_resource type="BoxMesh" id="BoxMesh_ky6mk"]
@@ -14,7 +14,6 @@ size = Vector3(0.801025, 1, 0.775391)
 
 [node name="RigidBody3D" type="RigidBody3D"]
 script = ExtResource("1_ky6mk")
-interact_text = "Press F to pick up"
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 mesh = SubResource("BoxMesh_ky6mk")

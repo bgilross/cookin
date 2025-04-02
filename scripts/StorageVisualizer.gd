@@ -1,5 +1,6 @@
-# StorageVisualizer.gd
+# StorageVisualizer.gd - Visualizes storage slots for containers
 extends MeshInstance3D
+class_name StorageVisualizer
 
 @export var debug_in_game: bool = false  # Show visualization during gameplay
 @export var visualize_slots: bool = true # Enable/disable visualization
@@ -15,11 +16,6 @@ func _ready():
 	# Get reference to parent storage object
 	storage_parent = get_parent()
 	
-	# Make sure parent has storage_slots
-	if not storage_parent.has_method("get_storage_slots") and not "storage_slots" in storage_parent:
-		push_error("StorageVisualizer parent must have storage_slots or get_storage_slots() method")
-		return
-	
 	# Create immediate mesh for drawing
 	debug_mesh = ImmediateMesh.new()
 	mesh = debug_mesh
@@ -30,9 +26,6 @@ func _ready():
 	debug_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	debug_material.vertex_color_use_as_albedo = true
 	material_override = debug_material
-	
-	# Print debugging info
-	print("StorageVisualizer initialized for: ", storage_parent.name)
 
 func _process(_delta):
 	# Only update visualization when needed
@@ -41,18 +34,24 @@ func _process(_delta):
 
 func update_debug_visualization():
 	if not visualize_slots:
-		debug_mesh = ImmediateMesh.new()
-		mesh = debug_mesh
+		debug_mesh.clear_surfaces()
 		return
 
-	var slots = storage_parent.get_storage_slots() if storage_parent.has_method("get_storage_slots") else storage_parent.storage_slots
+	# Get slots from parent
+	var slots = []
+	
+	if storage_parent is StorageObject:
+		slots = storage_parent.storage_slots
+	elif "storage_slots" in storage_parent:
+		slots = storage_parent.storage_slots
+	else:
+		return
+	
 	if slots.size() == 0:
 		return
 
-	# Create a new mesh and begin drawing
-	debug_mesh = ImmediateMesh.new()
-	mesh = debug_mesh
-
+	# Clear existing mesh
+	debug_mesh.clear_surfaces()
 	debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 
 	for slot in slots:
@@ -61,15 +60,12 @@ func update_debug_visualization():
 	debug_mesh.surface_end()
 
 func draw_slot_wireframe(slot):
+	# Get slot properties
 	var slot_pos = slot.position
-	
-	var size := Vector3(0.1, 0.1, 0.1)
-	if "size" in slot and typeof(slot.size) == TYPE_VECTOR3:
-		size = slot.size
-	size /= 2
+	var size = slot.size / 2 if "size" in slot else Vector3(0.05, 0.05, 0.05)
+	var color = slot_color_filled if slot.occupied else slot_color_empty
 
-	var color = slot_color_filled if ("occupied" in slot and slot.occupied) else slot_color_empty
-
+	# Calculate the 8 corners of the cube
 	var corners = []
 	for i in range(8):
 		var x = slot_pos.x + (size.x if i & 1 else -size.x)
@@ -77,12 +73,14 @@ func draw_slot_wireframe(slot):
 		var z = slot_pos.z + (size.z if i & 4 else -size.z)
 		corners.append(Vector3(x, y, z))
 
+	# Define edges of the cube
 	var edges = [
-		[0, 1], [1, 3], [3, 2], [2, 0],
-		[4, 5], [5, 7], [7, 6], [6, 4],
-		[0, 4], [1, 5], [2, 6], [3, 7]
+		[0, 1], [1, 3], [3, 2], [2, 0],  # Bottom face
+		[4, 5], [5, 7], [7, 6], [6, 4],  # Top face
+		[0, 4], [1, 5], [2, 6], [3, 7]   # Connecting edges
 	]
 
+	# Draw the edges
 	for edge in edges:
 		debug_mesh.surface_set_color(color)
 		debug_mesh.surface_add_vertex(corners[edge[0]])

@@ -160,5 +160,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.710888, 2.2606, -2.24978)
 [node name="RigidBody3D3" parent="." instance=ExtResource("5_gubc5")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38469, 0.0635532, -0.915479)
 
-[node name="RigidBody3D4" parent="." instance=ExtResource("5_rt2n2")]
+[node name="TRAY" parent="." instance=ExtResource("5_rt2n2")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.899241, 0.505, -4.14371)

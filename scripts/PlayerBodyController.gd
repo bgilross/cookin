@@ -1,3 +1,4 @@
+# Modified PlayerBodyController.gd with tray collection functionality
 extends CharacterBody3D
 
 const SPEED = 5.0
@@ -38,20 +39,44 @@ func _physics_process(delta: float) -> void:
 	handle_push_collisions()
 	
 func _unhandled_input(event: InputEvent) -> void:
+	# F key - Primary interaction (pick up objects or interact)
 	if event.is_action_pressed("interact"):
-		# Handle interaction with current target or held object
-		if current_target:
-			print("Interacting with: " + current_target.name)
-			if held_object and current_target.has_method("interact"):
-				current_target.interact(self)
-			elif not held_object and current_target.has_method("pickup"):
-				current_target.pickup(self)
-			elif not held_object and current_target.has_method("interact"):
-				current_target.interact(self)
+		handle_interact_action()
 	
-	# Use G key (drop action) exclusively for dropping
+	# E key - Use action (use held object on target or use target)
+	if event.is_action_pressed("use"):
+		handle_use_action()
+	
+	# G key - Drop held object
 	if event.is_action_pressed("drop") and held_object:
 		handle_drop_action()
+
+# New method for handling F key interactions
+func handle_interact_action() -> void:
+	if not current_target:
+		return
+		
+	print("Interacting with: " + current_target.name)
+	
+	# If target has interact method, call it
+	if current_target.has_method("interact"):
+		current_target.interact(self)
+	# Otherwise, if target has pickup method and we're not holding anything
+	elif not held_object and current_target.has_method("pickup"):
+		current_target.pickup(self)
+
+# New method for handling E key use actions
+func handle_use_action() -> void:
+	if not current_target:
+		return
+		
+	# If holding a tray and looking at pickable object
+	if held_object and held_object.has_method("collect_item") and current_target.has_method("pickup"):
+		print("Using tray to collect: " + current_target.name)
+		held_object.collect_item(current_target)
+	# If target has a use method
+	elif current_target.has_method("use"):
+		current_target.use(self)
 
 func handle_push_collisions():
 	for body in push_area.get_overlapping_bodies():
@@ -89,12 +114,19 @@ func handle_interaction_raycast() -> void:
 	
 	if raycast.is_colliding():
 		var hit = raycast.get_collider()
+		
+		# Check for pickable or interactable object
 		if hit.has_method("pickup") or hit.has_method("interact"):
 			current_target = hit
-			if "interact_text" in hit:
+			
+			# Change prompt based on what we're looking at and what we're holding
+			if held_object and held_object.has_method("collect_item") and hit.has_method("pickup"):
+				interact_label.text = "Press E to collect with tray"
+			elif "interact_text" in hit:
 				interact_label.text = hit.interact_text
 			else:
 				interact_label.text = "Press F"
+				
 			interact_label.visible = true
 			return
 	
@@ -139,28 +171,26 @@ func hold_item(obj: Node3D) -> void:
 	obj.transform = Transform3D.IDENTITY
 
 # ----------------------------
-# New Drop Functionality
+# Drop Functionality
 # ----------------------------
 func handle_drop_action() -> void:
 	if not held_object:
 		return
 		
-	# Check if held object is a storage container
-	var is_storage_container = false
+	# For simple objects, just drop them
+	if not held_object.has_method("remove_item"):
+		drop_held_object()
+		return
+		
+	# Check if storage container has items
 	var has_stored_items = false
 	
-	# First check if it's a VisibleStorageObject or has methods/properties related to storage
-	if held_object.has_method("get_storage_slots") or "storage_slots" in held_object:
-		is_storage_container = true
-		
-		# Get stored items if available
-		if "stored_items" in held_object and held_object.stored_items.size() > 0:
-			has_stored_items = true
-			print("Storage container has " + str(held_object.stored_items.size()) + " items")
+	if "stored_items" in held_object and held_object.stored_items.size() > 0:
+		has_stored_items = true
+		print("Storage container has " + str(held_object.stored_items.size()) + " items")
 	
 	# If it's not a storage container or has no items, just drop it
-	if not is_storage_container or not has_stored_items:
-		print("Dropping held object (not a storage container or empty)")
+	if not has_stored_items:
 		drop_held_object()
 		return
 	
@@ -171,19 +201,12 @@ func handle_drop_action() -> void:
 		var item_to_drop = items[items.size() - 1]
 		print("Attempting to drop item from container: " + item_to_drop.name)
 		
-		# Make sure the item is a valid node
-		if not is_instance_valid(item_to_drop):
-			print("Invalid item reference")
-			return
-		
-		# Remove it from the container first
-		var removed_item = null
-		if held_object.has_method("remove_item"):
-			removed_item = held_object.remove_item(item_to_drop)
+		# Remove it from the container
+		var removed_item = held_object.remove_item(item_to_drop)
 		
 		# If removal was successful
 		if removed_item:
-			# Calculate drop position - slightly in front of player
+			# Calculate drop position
 			var drop_transform = PickableUtils.calculate_drop_position(self)
 			
 			# Drop the item
