@@ -1,46 +1,130 @@
-
+## Base script for visible storage objects
+## This can be attached to either static or pickable storage containers
 extends Node3D
 
-@onready var storage_area: Area3D = find_child("StorageArea", true, false)
-@export var spacing: Vector3 = Vector3(0.05, 0.05, 0.05)  # Gap between stacked items
+const VisibleStorageUtils = preload("res://scripts/VisibleStorageUtils.gd")
+const PickableUtils = preload("res://scripts/PickableUtils.gd")
 
+@export_group("Storage Properties")
+@export var storage_size: Vector3 = Vector3(1.0, 0.3, 1.0)  # Physical dimensions of storage area
+@export var arrangement_type: VisibleStorageUtils.StorageArrangement = VisibleStorageUtils.StorageArrangement.GRID
+@export var item_size: Vector3 = Vector3(0.1, 0.1, 0.1)  # Default size for items
+@export var padding: float = 0.05  # Space between items
+@export var max_weight: float = 10.0  # Maximum weight capacity
+@export_group("Interaction")
+@export var interact_text: String = "Press F to interact"
+@export var is_pickable: bool = false  # Can this storage be picked up?
+
+# Internal properties
+var storage_slots: Array[VisibleStorageUtils.StorageSlot] = []
+var current_weight: float = 0.0
 var stored_items: Array[Node3D] = []
 
-func _ready():
-	if not storage_area:
-		push_warning("VisibleStorageItem: No child named 'StorageArea' found.")
+# Reference to storage area - should be a child node with a CollisionShape
+@onready var storage_area: Area3D = $StorageArea
 
-func try_store(item: Node3D) -> bool:
-	if not storage_area:
-		return false
-
-	var volume_aabb = storage_area.get_aabb()
-	var item_aabb = item.get_aabb()
-	var item_size = item_aabb.size + spacing
-	var index = stored_items.size()
-
-	var max_columns = int(volume_aabb.size.x / item_size.x)
-	var max_rows = int(volume_aabb.size.z / item_size.z)
-	var max_layers = int(volume_aabb.size.y / item_size.y)
-
-	var layer = index / (max_columns * max_rows)
-	var row = (index / max_columns) % max_rows
-	var column = index % max_columns
-
-	if layer >= max_layers:
-		print("[Storage] No space left for more items.")
-		return false
-
-	var pos_local = Vector3(
-		column * item_size.x,
-		layer * item_size.y,
-		row * item_size.z
+func _ready() -> void:
+	# Calculate storage slots based on container size
+	storage_slots = VisibleStorageUtils.calculate_storage_slots(
+		storage_size,
+		arrangement_type,
+		item_size,
+		padding
 	)
+	
+	# Set up storage area if exists
+	if storage_area:
+		# Connect signals for item detection
+		storage_area.connect("body_entered", _on_storage_area_body_entered)
+		storage_area.connect("body_exited", _on_storage_area_body_exited)
+	else:
+		print("Warning: No StorageArea node found as child of VisibleStorageObject")
 
-	var pos_global = storage_area.global_transform.origin + pos_local
+# Handle player interaction with the storage container
+func interact(player: Node) -> void:
+	print("Storage container interaction")
+	# Could open UI, show stats, etc.
+	
+	# If the player is holding an item, try to store it
+	if player.held_object:
+		var item = player.held_object
+		player.held_object = null  # Clear from player's hand
+		
+		# Try to add item to storage
+		var success = store_item(item)
+		if not success:
+			# If storage failed, give back to player
+			player.pick_up_object(item)
 
-	item.get_parent().remove_child(item)
-	add_child(item)
-	item.global_transform.origin = pos_global
-	stored_items.append(item)
-	return true
+# Try to store an item
+func store_item(item: Node3D) -> bool:
+	# Check if there's space available
+	var storage_usage = VisibleStorageUtils.calculate_storage_usage(storage_slots)
+	
+	if storage_usage.used_slots >= storage_usage.total_slots:
+		print("Storage is full")
+		return false
+	
+	# Check item weight if it has that property
+	if item.get("weight") != null:
+		if current_weight + item.weight > max_weight:
+			print("Weight limit exceeded")
+			return false
+		current_weight += item.weight
+	
+	# Try to add the item to storage
+	var success = VisibleStorageUtils.add_item_to_storage(self, item, storage_slots)
+	
+	if success:
+		stored_items.append(item)
+		
+		# If the item has physics, freeze it
+		if item is RigidBody3D:
+			PickableUtils.freeze_physics(item)
+	
+	return success
+
+# Remove an item from storage
+func remove_item(item: Node3D) -> Node3D:
+	# Find and remove the item
+	var removed_item = VisibleStorageUtils.remove_item_from_storage(item, storage_slots)
+	
+	if removed_item:
+		stored_items.erase(item)
+		
+		# Update weight if applicable
+		if item.get("weight") != null:
+			current_weight -= item.weight
+	
+	return removed_item
+
+# Handle pickup if this is a pickable storage container
+func pickup(player: Node) -> void:
+	if is_pickable:
+		# First, make sure any stored items are properly parented to this container
+		# so they move with it when picked up
+		for item in stored_items:
+			# Make sure the item stays child of this container
+			if item.get_parent() != self:
+				var global_transform = item.global_transform
+				if item.get_parent():
+					item.get_parent().remove_child(item)
+				add_child(item)
+				item.global_transform = global_transform
+		
+		# Now have the player pick up this container
+		PickableUtils.pickup(self, player)
+
+# Signal handling for storage area
+func _on_storage_area_body_entered(body: Node) -> void:
+	# Check if the body is a valid item that can be stored
+	if body.has_method("pickup") and not stored_items.has(body):
+		print("Valid item entered storage area: ", body.name)
+		
+		# Optionally, highlight or show UI prompt
+
+func _on_storage_area_body_exited(body: Node) -> void:
+	if body.has_method("pickup"):
+		print("Item left storage area: ", body.name)
+		
+		# Remove any highlights or UI

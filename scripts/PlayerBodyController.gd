@@ -98,9 +98,7 @@ func handle_interaction_raycast() -> void:
 # ----------------------------
 # Holding
 # ----------------------------
-func pick_up_object(obj: Node3D) -> void:
-	PickableUtils.pickup(obj, self)
-	held_object = obj
+
 
 func drop_held_object() -> void:
 	if held_object:
