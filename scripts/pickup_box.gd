@@ -5,29 +5,42 @@ const VisibleStorageUtils = preload("res://scripts/VisibleStorageUtils.gd")
 const PickableUtils = preload("res://scripts/PickableUtils.gd")
 
 @export var interact_text: String = "Press F to interact with tray"
-@export var storage_size: Vector3 = Vector3(0.5, 0.1, 0.3)  # Size of the tray storage area
-@export var item_size: Vector3 = Vector3(0.1, 0.05, 0.1)    # Average size of items to store
-@export var max_items: int = 6                             # Maximum number of items
+@export var item_size: Vector3 = Vector3(0.1, 0.05, 0.1)  # Average size of items to store
+@export var max_items: int = 6  # Maximum number of items (as a fallback)
 
 # Storage properties
 var storage_slots: Array[VisibleStorageUtils.StorageSlot] = []
 var stored_items: Array[Node3D] = []
 
+# Add getter for visualizer access
+func get_storage_slots() -> Array:
+	return storage_slots
+
 @onready var storage_area: Area3D = $StorageArea
 
 func _ready() -> void:
-	# Calculate storage slots in a grid pattern
-	storage_slots = VisibleStorageUtils.calculate_storage_slots(
-		storage_size,
+	# Check for storage area
+	if not storage_area:
+		push_error("pickup_box requires a child node named 'StorageArea' with a CollisionShape3D")
+		return
+		
+	# Calculate storage slots based on the actual StorageArea dimensions
+	storage_slots = VisibleStorageUtils.calculate_storage_slots_from_area(
+		storage_area,
 		VisibleStorageUtils.StorageArrangement.GRID,
 		item_size,
 		0.02  # Small padding between items
 	)
 	
-	# Setup the collision area for detecting items
-	if storage_area:
-		storage_area.connect("body_entered", _on_storage_area_body_entered)
-		storage_area.connect("body_exited", _on_storage_area_body_exited)
+	# Limit the number of slots to max_items if specified
+	if max_items > 0 and storage_slots.size() > max_items:
+		storage_slots = storage_slots.slice(0, max_items)
+	
+	print("Created %d storage slots for tray" % storage_slots.size())
+	
+	# Setup signals for the storage area
+	storage_area.connect("body_entered", _on_storage_area_body_entered)
+	storage_area.connect("body_exited", _on_storage_area_body_exited)
 
 # Player interaction
 func interact(player: Node) -> void:
@@ -68,7 +81,7 @@ func pickup(player: Node) -> void:
 # Store an item on the tray
 func store_item(item: Node3D) -> bool:
 	# Check if there's space
-	if stored_items.size() >= max_items:
+	if stored_items.size() >= storage_slots.size():
 		return false
 	
 	# Try to add the item

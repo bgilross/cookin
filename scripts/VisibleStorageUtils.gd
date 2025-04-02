@@ -23,6 +23,56 @@ class StorageSlot:
 		rotation = rot
 		size = sz
 
+# Get storage area dimensions from a collision shape
+static func get_storage_area_size(storage_area: Area3D) -> Vector3:
+	if not storage_area:
+		print("Error: No storage area provided")
+		return Vector3.ONE
+	
+	var collision_shape = storage_area.get_node_or_null("CollisionShape3D")
+	if not collision_shape:
+		print("Error: Storage area has no CollisionShape3D child")
+		return Vector3.ONE
+		
+	var shape = collision_shape.shape
+	if not shape:
+		print("Error: CollisionShape3D has no shape")
+		return Vector3.ONE
+	
+	# Get dimensions based on shape type
+	var size = Vector3.ONE
+	
+	if shape is BoxShape3D:
+		size = shape.size
+	elif shape is SphereShape3D:
+		var radius = shape.radius
+		size = Vector3(radius * 2, radius * 2, radius * 2)
+	elif shape is CapsuleShape3D:
+		var radius = shape.radius
+		var height = shape.height
+		size = Vector3(radius * 2, height, radius * 2)
+	elif shape is CylinderShape3D:
+		var radius = shape.radius
+		var height = shape.height
+		size = Vector3(radius * 2, height, radius * 2)
+	else:
+		print("Warning: Unsupported collision shape type, using default size")
+	
+	# Apply the transform scale to the size
+	size *= collision_shape.transform.basis.get_scale()
+	
+	return size
+
+# Get all valid storage slots based on storage area and arrangement type
+static func calculate_storage_slots_from_area(
+	storage_area: Area3D, 
+	arrangement: int, 
+	item_size: Vector3 = Vector3(0.1, 0.1, 0.1),
+	padding: float = 0.05
+) -> Array[StorageSlot]:
+	var container_size = get_storage_area_size(storage_area)
+	return calculate_storage_slots(container_size, arrangement, item_size, padding)
+
 # Get all valid storage slots based on container size and arrangement type
 static func calculate_storage_slots(
 	container_size: Vector3, 
@@ -163,29 +213,46 @@ static func calculate_storage_usage(slots: Array[StorageSlot]) -> Dictionary:
 	
 	return result
 
-# Visualize storage slots for debugging (draw gizmos)
-static func debug_draw_slots(storage_node: Node3D, slots: Array[StorageSlot], immediate_geometry: ImmediateGeometry):
-	immediate_geometry.clear()
-	immediate_geometry.begin(Mesh.PRIMITIVE_LINES)
+# Visualize storage slots for debugging using modern Godot 4.x drawing
+# This should be called from _process or other appropriate function
+static func debug_draw_slots(storage_node: Node3D, slots: Array[StorageSlot]):
+	# This function requires the calling class to extend Node3D and implement _draw()
+	# Which will call this function
 	
 	for slot in slots:
-		var global_pos = storage_node.global_transform * slot.position
-		
-		# Draw a small cube at each slot position
+		var slot_pos = slot.position
 		var size = slot.size / 2
 		
 		# Set color based on whether slot is occupied
-		if slot.occupied:
-			immediate_geometry.set_color(Color(1, 0, 0, 0.5)) # Red for occupied
-		else:
-			immediate_geometry.set_color(Color(0, 1, 0, 0.5)) # Green for available
+		var color = Color(1, 0, 0, 0.5) if slot.occupied else Color(0, 1, 0, 0.5)
 		
-		# Draw the cube wireframe
+		# Draw cube wireframe in 3D
+		var lines = []
+		
+		# Define the 8 corners of the cube
+		var corners = []
 		for i in range(8):
-			var x = size.x if i & 1 else -size.x
-			var y = size.y if i & 2 else -size.y
-			var z = size.z if i & 4 else -size.z
-			
-			immediate_geometry.add_vertex(global_pos + Vector3(x, y, z))
-	
-	immediate_geometry.end()
+			var x = slot_pos.x + (size.x if i & 1 else -size.x)
+			var y = slot_pos.y + (size.y if i & 2 else -size.y)
+			var z = slot_pos.z + (size.z if i & 4 else -size.z)
+			corners.append(Vector3(x, y, z))
+		
+		# Connect corners with lines (12 edges of a cube)
+		var edges = [
+			[0, 1], [1, 3], [3, 2], [2, 0],  # Bottom face
+			[4, 5], [5, 7], [7, 6], [6, 4],  # Top face
+			[0, 4], [1, 5], [2, 6], [3, 7]   # Connecting edges
+		]
+		
+		for edge in edges:
+			lines.append([corners[edge[0]], corners[edge[1]], color])
+		
+		# Return the lines data so the caller can use it in _draw
+		return lines
+
+# Example of how to use this in a storage container class:
+# func _draw():
+#     if Engine.is_editor_hint() or debug_mode:
+#         var lines = VisibleStorageUtils.debug_draw_slots(self, storage_slots)
+#         for line in lines:
+#             draw_line_3d(line[0], line[1], line[2])

@@ -6,7 +6,6 @@ const VisibleStorageUtils = preload("res://scripts/VisibleStorageUtils.gd")
 const PickableUtils = preload("res://scripts/PickableUtils.gd")
 
 @export_group("Storage Properties")
-@export var storage_size: Vector3 = Vector3(1.0, 0.3, 1.0)  # Physical dimensions of storage area
 @export var arrangement_type: VisibleStorageUtils.StorageArrangement = VisibleStorageUtils.StorageArrangement.GRID
 @export var item_size: Vector3 = Vector3(0.1, 0.1, 0.1)  # Default size for items
 @export var padding: float = 0.05  # Space between items
@@ -20,25 +19,32 @@ var storage_slots: Array[VisibleStorageUtils.StorageSlot] = []
 var current_weight: float = 0.0
 var stored_items: Array[Node3D] = []
 
+# Add getter for visualizer access
+func get_storage_slots() -> Array:
+	return storage_slots
+
 # Reference to storage area - should be a child node with a CollisionShape
 @onready var storage_area: Area3D = $StorageArea
 
 func _ready() -> void:
-	# Calculate storage slots based on container size
-	storage_slots = VisibleStorageUtils.calculate_storage_slots(
-		storage_size,
+	# Check for storage area
+	if not storage_area:
+		push_error("VisibleStorageObject requires a child node named 'StorageArea' with a CollisionShape3D")
+		return
+	
+	# Calculate storage slots based on the actual storage area dimensions
+	storage_slots = VisibleStorageUtils.calculate_storage_slots_from_area(
+		storage_area,
 		arrangement_type,
 		item_size,
 		padding
 	)
 	
-	# Set up storage area if exists
-	if storage_area:
-		# Connect signals for item detection
-		storage_area.connect("body_entered", _on_storage_area_body_entered)
-		storage_area.connect("body_exited", _on_storage_area_body_exited)
-	else:
-		print("Warning: No StorageArea node found as child of VisibleStorageObject")
+	print("Created %d storage slots" % storage_slots.size())
+	
+	# Set up storage area signals
+	storage_area.connect("body_entered", _on_storage_area_body_entered)
+	storage_area.connect("body_exited", _on_storage_area_body_exited)
 
 # Handle player interaction with the storage container
 func interact(player: Node) -> void:
@@ -54,7 +60,7 @@ func interact(player: Node) -> void:
 		var success = store_item(item)
 		if not success:
 			# If storage failed, give back to player
-			player.pick_up_object(item)
+			player.hold_item(item)
 
 # Try to store an item
 func store_item(item: Node3D) -> bool:
