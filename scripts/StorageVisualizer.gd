@@ -41,65 +41,50 @@ func _process(_delta):
 
 func update_debug_visualization():
 	if not visualize_slots:
-		# Instead of clearing, create a new empty mesh
 		debug_mesh = ImmediateMesh.new()
 		mesh = debug_mesh
 		return
-		
-	# Get storage slots from parent
-	var slots = []
-	
-	if storage_parent.has_method("get_storage_slots"):
-		slots = storage_parent.get_storage_slots()
-	elif "storage_slots" in storage_parent:
-		slots = storage_parent.storage_slots
-	else:
-		print("No storage slots found in parent")
-		return
-	
+
+	var slots = storage_parent.get_storage_slots() if storage_parent.has_method("get_storage_slots") else storage_parent.storage_slots
 	if slots.size() == 0:
-		print("Parent has 0 storage slots")
 		return
-	
-	# Instead of clearing, create a new mesh
+
+	# Create a new mesh and begin drawing
 	debug_mesh = ImmediateMesh.new()
 	mesh = debug_mesh
-	
-	# IMPORTANT: Don't try to set material on surface 0 before it exists
-	# The material is already set via material_override
-	
-	# Draw each slot
+
+	debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+
 	for slot in slots:
 		draw_slot_wireframe(slot)
 
+	debug_mesh.surface_end()
+
 func draw_slot_wireframe(slot):
 	var slot_pos = slot.position
-	var size = slot.size if "size" in slot and slot.size else Vector3(0.1, 0.1, 0.1)
-	size = size / 2  # We need half-extents for drawing
 	
-	# Set color based on whether slot is occupied
-	var color = slot_color_filled if "occupied" in slot and slot.occupied else slot_color_empty
-	
-	# Define the 8 corners of the cube
+	var size := Vector3(0.1, 0.1, 0.1)
+	if "size" in slot and typeof(slot.size) == TYPE_VECTOR3:
+		size = slot.size
+	size /= 2
+
+	var color = slot_color_filled if ("occupied" in slot and slot.occupied) else slot_color_empty
+
 	var corners = []
 	for i in range(8):
 		var x = slot_pos.x + (size.x if i & 1 else -size.x)
 		var y = slot_pos.y + (size.y if i & 2 else -size.y)
 		var z = slot_pos.z + (size.z if i & 4 else -size.z)
 		corners.append(Vector3(x, y, z))
-	
-	# Connect corners with lines (12 edges of a cube)
+
 	var edges = [
-		[0, 1], [1, 3], [3, 2], [2, 0],  # Bottom face
-		[4, 5], [5, 7], [7, 6], [6, 4],  # Top face
-		[0, 4], [1, 5], [2, 6], [3, 7]   # Connecting edges
+		[0, 1], [1, 3], [3, 2], [2, 0],
+		[4, 5], [5, 7], [7, 6], [6, 4],
+		[0, 4], [1, 5], [2, 6], [3, 7]
 	]
-	
-	# Draw lines
+
 	for edge in edges:
-		debug_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
 		debug_mesh.surface_set_color(color)
 		debug_mesh.surface_add_vertex(corners[edge[0]])
 		debug_mesh.surface_set_color(color)
 		debug_mesh.surface_add_vertex(corners[edge[1]])
-		debug_mesh.surface_end()
