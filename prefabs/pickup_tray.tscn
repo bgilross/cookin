@@ -1,0 +1,25 @@
+[gd_scene load_steps=5 format=3 uid="uid://bmr26oww44ruv"]
+
+[ext_resource type="Script" uid="uid://vj30gt45i5qi" path="res://scripts/PickableObject.gd" id="1_k2l64"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ky6mk"]
+size = Vector3(0.72, 0.01, 0.775)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7bav3"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k2l64"]
+
+[node name="RigidBody3D" type="RigidBody3D"]
+script = ExtResource("1_k2l64")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ky6mk")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00326735, 0.479955, -0.00900668)
+shape = SubResource("BoxShape3D_7bav3")
+
+[node name="StorageArea" type="Area3D" parent="."]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StorageArea"]
+shape = SubResource("BoxShape3D_k2l64")
